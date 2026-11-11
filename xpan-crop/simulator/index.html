@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XPan Framing Simulator</title>
+<style>
+:root{--bg:#f6f5f2;--panel:#fff;--ink:#1c1b19;--muted:#6b6862;--line:#d9d6cf;--accent:#b8860b;--stage:#111}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141413;--panel:#1d1c1a;--ink:#ecebe7;--muted:#a09d95;--line:#33312d;--accent:#e0b040;--stage:#000}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,sans-serif}
+main{max-width:980px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:20px;margin:0 0 4px}
+p.sub{margin:0 0 16px;color:var(--muted)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+button,label.file,input[type=text]{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
+button[aria-pressed=true]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+input[type=text]{width:80px;cursor:text}
+.stage{background:var(--stage);border-radius:10px;padding:12px;display:flex;justify-content:center}
+canvas{max-width:100%;height:auto;display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.card h2{font-size:13px;margin:0 0 6px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.card p{margin:0}
+code{font-family:ui-monospace,Menlo,monospace;font-size:13px}
+.note{color:var(--muted);font-size:13px;margin-top:14px}
+</style>
+</head>
+<body>
+<main>
+<h1>XPan framing simulator</h1>
+<p class="sub">X100V full frame 6240×4160, with a centered crop at the chosen ratio. Geometry only. It does not run camera firmware.</p>
+<div class="bar">
+  <div class="tabs" id="tabs" role="group" aria-label="View">
+    <button data-v="lcd" aria-pressed="true">LCD / EVF</button>
+    <button data-v="ovf" aria-pressed="false">OVF</button>
+    <button data-v="jpeg" aria-pressed="false">JPEG output</button>
+    <button data-v="raf" aria-pressed="false">RAF</button>
+  </div>
+  <label>Ratio <input type="text" id="ratio" value="65:24" aria-label="Aspect ratio"></label>
+  <label class="file">Load photo<input type="file" id="file" accept="image/*" hidden></label>
+</div>
+<div class="stage"><canvas id="c" width="936" height="624" role="img" aria-label="Framing preview"></canvas></div>
+<div class="grid">
+  <div class="card"><h2>Crop rectangle</h2><p id="rect"></p></div>
+  <div class="card"><h2>What this view shows</h2><p id="desc"></p></div>
+</div>
+<p class="note">The OVF is optical, so it can only show a bright-frame guide, and parallax shifts it at close range. The RAF view assumes the sensor data is kept in full and the crop is stored as a reversible setting. That is how Fujifilm's GFX files appear to behave, and it has not been confirmed for the X100V.</p>
+</main>
+<script>
+const W=6240,H=4160;
+const c=document.getElementById('c'),g=c.getContext('2d');
+let view='lcd',img=null;
+function crop(rw,rh){let cw,ch;if(W*rh>=H*rw){ch=H;cw=Math.floor(H*rw/rh)}else{cw=W;ch=Math.floor(W*rh/rw)}return{x:Math.floor((W-cw)/2),y:Math.floor((H-ch)/2),w:cw,h:ch}}
+function ratio(){const m=/^\s*(\d+)\s*:\s*(\d+)\s*$/.exec(document.getElementById('ratio').value);return m&&+m[1]>0&&+m[2]>0?[+m[1],+m[2]]:null}
+function scene(){const s=document.createElement('canvas');s.width=936;s.height=624;const x=s.getContext('2d');
+  if(img){x.drawImage(img,0,0,s.width,s.height);return s}
+  const sky=x.createLinearGradient(0,0,0,624);sky.addColorStop(0,'#5d8fc7');sky.addColorStop(.6,'#e9c9a0');sky.addColorStop(1,'#3d5a40');x.fillStyle=sky;x.fillRect(0,0,936,624);
+  x.fillStyle='#2b3a2e';x.beginPath();x.moveTo(0,470);for(let i=0;i<=936;i+=52)x.lineTo(i,430+((i*37)%70));x.lineTo(936,624);x.lineTo(0,624);x.fill();
+  x.strokeStyle='#fff8';x.lineWidth=1;for(let i=1;i<10;i++){x.beginPath();x.moveTo(i*93.6,0);x.lineTo(i*93.6,624);x.stroke()}
+  for(let i=1;i<6;i++){x.beginPath();x.moveTo(0,i*104);x.lineTo(936,i*104);x.stroke()}
+  x.fillStyle='#fff';x.font='bold 22px system-ui';x.fillText('full 3:2 frame',16,34);return s}
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function draw(){
+  const r=ratio();const out=document.getElementById('rect');
+  if(!r){out.textContent='Enter a ratio like 65:24.';return}
+  const k=crop(...r),sx=936/W,sy=624/H,rx=k.x*sx,ry=k.y*sy,rw=k.w*sx,rh=k.h*sy;
+  const s=scene();g.clearRect(0,0,936,624);g.fillStyle='#000';g.fillRect(0,0,936,624);
+  let d='';
+  if(view==='lcd'){g.drawImage(s,rx,ry,rw,rh,rx,ry,rw,rh);g.strokeStyle='#fff3';g.strokeRect(rx,ry,rw,rh);
+    d='The live view is masked to the crop. The rest of the screen is black. This is the framing you compose in.'}
+  else if(view==='ovf'){g.drawImage(s,0,0);g.strokeStyle='#ffd600';g.lineWidth=2;g.strokeRect(rx,ry,rw,rh);
+    g.fillStyle='#ffd600';g.font='13px system-ui';g.fillText('bright frame',rx+8,ry+18);
+    d='The optical view shows the whole scene. A bright-frame line marks the crop. Parallax moves it at close focus distances.'}
+  else if(view==='jpeg'){const sc=Math.min(936/k.w,624/k.h);const w=k.w*sc,h=k.h*sc;g.drawImage(s,rx,ry,rw,rh,(936-w)/2,(624-h)/2,w,h);
+    d=`The saved JPEG is the cropped rectangle only: ${k.w}×${k.h} pixels.`}
+  else{g.drawImage(s,0,0);g.fillStyle='#000a';g.fillRect(0,0,936,ry);g.fillRect(0,ry+rh,936,624-ry-rh);g.fillRect(0,ry,rx,rh);g.fillRect(rx+rw,ry,624,rh);
+    g.strokeStyle='#ffd600';g.setLineDash([8,6]);g.strokeRect(rx,ry,rw,rh);g.setLineDash([]);
+    d=`The RAF keeps the full ${W}×${H} sensor data. The dimmed area is outside the stored crop and could be restored.`}
+  out.innerHTML=`<code>x ${k.x}, y ${k.y}<br>${k.w} × ${k.h}</code><br>${(100*k.w*k.h/(W*H)).toFixed(1)}% of the sensor area`;
+  document.getElementById('desc').textContent=d}
+document.getElementById('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;view=b.dataset.v;
+  document.querySelectorAll('#tabs button').forEach(x=>x.setAttribute('aria-pressed',x===b));draw()});
+document.getElementById('ratio').addEventListener('input',draw);
+document.getElementById('file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const i=new Image();i.onload=()=>{img=i;draw()};i.src=URL.createObjectURL(f)});
+draw();
+</script>
+</body>
+</html>

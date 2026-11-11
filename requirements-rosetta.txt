@@ -1,0 +1,9 @@
+# Fallback for Unicorn JIT SIGILL inside the macOS process sandbox.
+# Install/run under Rosetta with `arch -x86_64`.
+# Versions differ from requirements-dev.txt; use native outside sandbox normally.
+pytest==8.4.2
+Pillow==11.3.0
+numpy==2.0.2
+rawpy==0.25.1
+unicorn==2.1.4
+capstone==5.0.9

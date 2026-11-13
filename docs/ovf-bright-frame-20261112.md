@@ -6,6 +6,6 @@ The remaining path reads a calibrated frame rectangle, applies an aspect-depende
 
 `tools/x100v_ovf_frame_scale_6524.py` verifies six nearby instruction words and the original float before producing a single four-byte write. The other tools in this update record the prior probes and their synthetic checks. These programs require a user-supplied official firmware image for source-bound work; this repository contains no Fujifilm firmware bytes or ready-made boot files.
 
-In a physical X100V SD-boot test, the owner observed that the solid OVF frame changed to 65:24 and shifted with focus distance. Five RAW+FINE captures at the existing `L 16:9` menu setting saved 65:24 JPEG and RAF pairs. The camera files and identifying metadata are kept private. The image-size setting was restored and normal no-card boot was confirmed.
+In a physical X100V SD-boot test, the owner observed that the solid OVF frame changed to 65:24, shifted with focus distance and aligned with the always-visible corner marks. LCD and EVF remained 65:24. Five RAW+FINE captures at the existing `L 16:9` menu setting saved 65:24 JPEG and RAF pairs. The camera files and identifying metadata are kept private. The image-size setting was restored and normal no-card boot was confirmed.
 
-This does not establish measured OVF alignment across focus distances, the corner-mark geometry on this build, compressed RAW, in-camera playback, updater acceptance or internal-flash recovery. The camera has not been flashed.
+This does not establish measured OVF alignment across focus distances, compressed RAW, in-camera playback, updater acceptance or internal-flash recovery. The camera has not been flashed.

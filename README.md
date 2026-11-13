@@ -15,7 +15,8 @@ camera files, settings backups, private test logs, or ready-to-use SD boot files
 - The OVF has two distinct controls. Earlier layout edits narrowed the corner
   marks while the solid frame stayed 16:9. A later height-factor edit changed
   the solid bright frame to 65:24 on the camera; the owner observed it shift
-  with focus distance. See the [OVF research note](docs/ovf-bright-frame-20261112.md).
+  with focus distance and align with the corner marks. See the
+  [OVF research note](docs/ovf-bright-frame-20261112.md).
 - The research tools include exact-byte checks, geometry calculations,
   update-container inspection, and bounded ARM probes. Their tests do not
   establish that any candidate is safe to flash.
@@ -52,7 +53,7 @@ camera firmware.
 
 The code is published for study and review. Before a camera-ready release,
 the remaining work includes measuring OVF alignment across focus distances,
-checking corner-mark geometry on the latest build, validating JPEG and RAF
+validating JPEG and RAF
 output on held-out scenes, and establishing updater acceptance and stock
 recovery. All firmware inputs must be provided by the user from an authorized
 source.

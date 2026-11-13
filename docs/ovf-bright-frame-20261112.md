@@ -8,4 +8,4 @@ The remaining path reads a calibrated frame rectangle, applies an aspect-depende
 
 In a physical X100V SD-boot test, the owner observed that the solid OVF frame changed to 65:24, shifted with focus distance and aligned with the always-visible corner marks. LCD and EVF remained 65:24. Five RAW+FINE captures at the existing `L 16:9` menu setting saved 65:24 JPEG and RAF pairs. The camera files and identifying metadata are kept private. The image-size setting was restored and normal no-card boot was confirmed.
 
-This does not establish measured OVF alignment across focus distances, compressed RAW, in-camera playback, updater acceptance or internal-flash recovery. The camera has not been flashed.
+This does not establish measured OVF alignment across focus distances, compressed RAW, or in-camera playback. A later persistent update derived from the SD-boot writes failed to start after installation; see the [incident note](persistent-update-failure-20261112.md).
